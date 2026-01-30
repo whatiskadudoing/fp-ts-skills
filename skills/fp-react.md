@@ -1,344 +1,365 @@
 ---
-name: fp-ts-react
-description: Functional programming patterns for React applications using fp-ts, including referential stability, state management, async data handling, and form validation
-version: 1.0.0
+name: Functional Programming in React
+description: Practical patterns for using fp-ts with React - hooks, state, forms, data fetching. Works with React 18/19, Next.js 14/15.
+version: 2.0.0
 author: fp-ts-skills
-tags:
-  - fp-ts
-  - react
-  - functional-programming
-  - typescript
-  - hooks
-  - state-management
-  - async
-  - validation
+tags: [fp-ts, react, typescript, hooks, state-management, forms, data-fetching, remote-data, react-19, next-js]
 ---
 
-# fp-ts with React
+# Functional Programming in React
 
-This skill covers patterns for integrating fp-ts with React applications, focusing on referential stability, state management, async operations, and form validation.
+Practical patterns for React apps. No jargon, just code that works.
 
-## Referential Stability with fp-ts-react-stable-hooks
+---
 
-fp-ts data structures like `Option` and `Either` create new object references on every render, breaking React's memoization. Use `fp-ts-react-stable-hooks` to solve this.
+## Quick Reference
 
-### Installation
+| Pattern | Use When |
+|---------|----------|
+| `Option` | Value might be missing (user not loaded yet) |
+| `Either` | Operation might fail (form validation) |
+| `TaskEither` | Async operation might fail (API calls) |
+| `RemoteData` | Need to show loading/error/success states |
+| `pipe` | Chaining multiple transformations |
 
-```bash
-npm install fp-ts-react-stable-hooks
-# or
-yarn add fp-ts-react-stable-hooks
-```
+---
 
-### useStableO - Stable Option
+## 1. State with Option (Maybe It's There, Maybe Not)
 
-```typescript
-import { useStableO } from 'fp-ts-react-stable-hooks'
-import * as O from 'fp-ts/Option'
-import * as Eq from 'fp-ts/Eq'
-import * as S from 'fp-ts/string'
-import * as N from 'fp-ts/number'
+Use `Option` instead of `null | undefined` for clearer intent.
 
-// Basic usage - value is referentially stable
-function UserProfile({ userId }: { userId: string }) {
-  const [user, setUser] = useStableO<User>(O.none, userEq)
-
-  // user reference only changes when the inner value changes
-  // Safe to use in dependency arrays
-  useEffect(() => {
-    fetchUser(userId).then(u => setUser(O.some(u)))
-  }, [userId])
-
-  return pipe(
-    user,
-    O.fold(
-      () => <Loading />,
-      (u) => <UserCard user={u} />
-    )
-  )
-}
-
-// Define Eq instance for your types
-const userEq: Eq.Eq<User> = Eq.struct({
-  id: S.Eq,
-  name: S.Eq,
-  email: S.Eq
-})
-```
-
-### useStableE - Stable Either
+### Basic Pattern
 
 ```typescript
-import { useStableE } from 'fp-ts-react-stable-hooks'
-import * as E from 'fp-ts/Either'
-
-function ValidatedInput() {
-  const [value, setValue] = useStableE<ValidationError, string>(
-    E.right(''),
-    validationErrorEq,
-    S.Eq
-  )
-
-  const handleChange = (input: string) => {
-    setValue(validateInput(input))
-  }
-
-  return pipe(
-    value,
-    E.fold(
-      (error) => <InputWithError error={error.message} />,
-      (valid) => <Input value={valid} onChange={handleChange} />
-    )
-  )
-}
-```
-
-### Custom Stable Hook Pattern
-
-When you need stability without the library:
-
-```typescript
-import { useRef, useState, useCallback } from 'react'
-import * as O from 'fp-ts/Option'
-import * as Eq from 'fp-ts/Eq'
-
-function useStableOption<A>(
-  initial: O.Option<A>,
-  eq: Eq.Eq<A>
-): [O.Option<A>, (next: O.Option<A>) => void] {
-  const [value, setValue] = useState(initial)
-  const valueRef = useRef(value)
-
-  const optionEq = O.getEq(eq)
-
-  const stableSetValue = useCallback((next: O.Option<A>) => {
-    if (!optionEq.equals(valueRef.current, next)) {
-      valueRef.current = next
-      setValue(next)
-    }
-  }, [])
-
-  return [value, stableSetValue]
-}
-```
-
-## Managing Nullable State with Option
-
-### Basic Option State
-
-```typescript
+import { useState } from 'react'
 import * as O from 'fp-ts/Option'
 import { pipe } from 'fp-ts/function'
 
 interface User {
   id: string
   name: string
-  email: O.Option<string>
+  email: string
 }
 
-function UserSettings() {
-  const [selectedUser, setSelectedUser] = useState<O.Option<User>>(O.none)
+function UserProfile() {
+  // Option says "this might not exist yet"
+  const [user, setUser] = useState<O.Option<User>>(O.none)
 
-  const handleSelect = (user: User) => setSelectedUser(O.some(user))
-  const handleClear = () => setSelectedUser(O.none)
+  const handleLogin = (userData: User) => {
+    setUser(O.some(userData))
+  }
 
-  return (
-    <div>
-      {pipe(
-        selectedUser,
-        O.fold(
-          () => <UserSelector onSelect={handleSelect} />,
-          (user) => (
-            <div>
-              <UserDetails user={user} />
-              <button onClick={handleClear}>Clear</button>
-            </div>
-          )
-        )
-      )}
-    </div>
+  const handleLogout = () => {
+    setUser(O.none)
+  }
+
+  return pipe(
+    user,
+    O.match(
+      // When there's no user
+      () => <button onClick={() => handleLogin({ id: '1', name: 'Alice', email: 'alice@example.com' })}>
+        Log In
+      </button>,
+      // When there's a user
+      (u) => (
+        <div>
+          <p>Welcome, {u.name}!</p>
+          <button onClick={handleLogout}>Log Out</button>
+        </div>
+      )
+    )
   )
-}
-```
-
-### Option with Default Values
-
-```typescript
-import * as O from 'fp-ts/Option'
-import { pipe } from 'fp-ts/function'
-
-function ThemeSelector() {
-  const [customTheme, setCustomTheme] = useState<O.Option<Theme>>(O.none)
-
-  const activeTheme = pipe(
-    customTheme,
-    O.getOrElse(() => defaultTheme)
-  )
-
-  return <ThemeProvider theme={activeTheme}>...</ThemeProvider>
 }
 ```
 
 ### Chaining Optional Values
 
 ```typescript
-function UserAvatar({ userId }: { userId: O.Option<string> }) {
-  const [users] = useUsers()
+import * as O from 'fp-ts/Option'
+import { pipe } from 'fp-ts/function'
 
-  const avatarUrl = pipe(
-    userId,
-    O.chain(id => O.fromNullable(users[id])),
-    O.chain(user => user.avatarUrl),
-    O.getOrElse(() => '/default-avatar.png')
+interface Profile {
+  user: O.Option<{
+    name: string
+    settings: O.Option<{
+      theme: string
+    }>
+  }>
+}
+
+function getTheme(profile: Profile): string {
+  return pipe(
+    profile.user,
+    O.flatMap(u => u.settings),
+    O.map(s => s.theme),
+    O.getOrElse(() => 'light') // default
   )
-
-  return <img src={avatarUrl} />
 }
 ```
 
-## Async Data with TaskEither
+---
 
-### Basic Data Fetching Hook
+## 2. Form Validation with Either
+
+Either is perfect for validation: `Left` = errors, `Right` = valid data.
+
+### Simple Form Validation
 
 ```typescript
+import * as E from 'fp-ts/Either'
+import * as A from 'fp-ts/Array'
+import { pipe } from 'fp-ts/function'
+
+// Validation functions return Either<ErrorMessage, ValidValue>
+const validateEmail = (email: string): E.Either<string, string> =>
+  email.includes('@')
+    ? E.right(email)
+    : E.left('Invalid email address')
+
+const validatePassword = (password: string): E.Either<string, string> =>
+  password.length >= 8
+    ? E.right(password)
+    : E.left('Password must be at least 8 characters')
+
+const validateName = (name: string): E.Either<string, string> =>
+  name.trim().length > 0
+    ? E.right(name.trim())
+    : E.left('Name is required')
+```
+
+### Collecting All Errors (Not Just First One)
+
+```typescript
+import * as E from 'fp-ts/Either'
+import { sequenceS } from 'fp-ts/Apply'
+import { getSemigroup } from 'fp-ts/NonEmptyArray'
+import { pipe } from 'fp-ts/function'
+
+// This collects ALL errors, not just the first one
+const validateAll = sequenceS(E.getApplicativeValidation(getSemigroup<string>()))
+
+interface SignupForm {
+  name: string
+  email: string
+  password: string
+}
+
+interface ValidatedForm {
+  name: string
+  email: string
+  password: string
+}
+
+function validateForm(form: SignupForm): E.Either<string[], ValidatedForm> {
+  return pipe(
+    validateAll({
+      name: pipe(validateName(form.name), E.mapLeft(e => [e])),
+      email: pipe(validateEmail(form.email), E.mapLeft(e => [e])),
+      password: pipe(validatePassword(form.password), E.mapLeft(e => [e])),
+    })
+  )
+}
+
+// Usage in component
+function SignupForm() {
+  const [form, setForm] = useState({ name: '', email: '', password: '' })
+  const [errors, setErrors] = useState<string[]>([])
+
+  const handleSubmit = () => {
+    pipe(
+      validateForm(form),
+      E.match(
+        (errs) => setErrors(errs),     // Show all errors
+        (valid) => {
+          setErrors([])
+          submitToServer(valid)         // Submit valid data
+        }
+      )
+    )
+  }
+
+  return (
+    <form onSubmit={e => { e.preventDefault(); handleSubmit() }}>
+      <input
+        value={form.name}
+        onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+        placeholder="Name"
+      />
+      <input
+        value={form.email}
+        onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+        placeholder="Email"
+      />
+      <input
+        type="password"
+        value={form.password}
+        onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+        placeholder="Password"
+      />
+
+      {errors.length > 0 && (
+        <ul style={{ color: 'red' }}>
+          {errors.map((err, i) => <li key={i}>{err}</li>)}
+        </ul>
+      )}
+
+      <button type="submit">Sign Up</button>
+    </form>
+  )
+}
+```
+
+### Field-Level Errors (Better UX)
+
+```typescript
+type FieldErrors = Partial<Record<keyof SignupForm, string>>
+
+function validateFormWithFieldErrors(form: SignupForm): E.Either<FieldErrors, ValidatedForm> {
+  const errors: FieldErrors = {}
+
+  pipe(validateName(form.name), E.mapLeft(e => { errors.name = e }))
+  pipe(validateEmail(form.email), E.mapLeft(e => { errors.email = e }))
+  pipe(validatePassword(form.password), E.mapLeft(e => { errors.password = e }))
+
+  return Object.keys(errors).length > 0
+    ? E.left(errors)
+    : E.right({ name: form.name.trim(), email: form.email, password: form.password })
+}
+
+// In component
+{errors.email && <span className="error">{errors.email}</span>}
+```
+
+---
+
+## 3. Data Fetching with TaskEither
+
+TaskEither = async operation that might fail. Perfect for API calls.
+
+### Basic Fetch Hook
+
+```typescript
+import { useState, useEffect } from 'react'
 import * as TE from 'fp-ts/TaskEither'
 import * as E from 'fp-ts/Either'
 import { pipe } from 'fp-ts/function'
 
-interface FetchError {
-  type: 'network' | 'parse' | 'validation'
-  message: string
-}
+// Wrap fetch in TaskEither
+const fetchJson = <T>(url: string): TE.TaskEither<Error, T> =>
+  TE.tryCatch(
+    async () => {
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return res.json()
+    },
+    (err) => err instanceof Error ? err : new Error(String(err))
+  )
 
-function useFetch<A>(
-  task: TE.TaskEither<FetchError, A>
-): {
-  data: E.Either<FetchError, A> | null
-  loading: boolean
-  refetch: () => void
-} {
-  const [state, setState] = useState<{
-    data: E.Either<FetchError, A> | null
-    loading: boolean
-  }>({ data: null, loading: true })
-
-  const execute = useCallback(async () => {
-    setState(s => ({ ...s, loading: true }))
-    const result = await task()
-    setState({ data: result, loading: false })
-  }, [task])
+// Custom hook
+function useFetch<T>(url: string) {
+  const [data, setData] = useState<T | null>(null)
+  const [error, setError] = useState<Error | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    execute()
-  }, [execute])
+    setLoading(true)
+    setError(null)
 
-  return { ...state, refetch: execute }
+    pipe(
+      fetchJson<T>(url),
+      TE.match(
+        (err) => {
+          setError(err)
+          setLoading(false)
+        },
+        (result) => {
+          setData(result)
+          setLoading(false)
+        }
+      )
+    )()
+  }, [url])
+
+  return { data, error, loading }
 }
 
 // Usage
-const fetchUser = (id: string): TE.TaskEither<FetchError, User> =>
-  pipe(
-    TE.tryCatch(
-      () => fetch(`/api/users/${id}`).then(r => r.json()),
-      (error): FetchError => ({ type: 'network', message: String(error) })
-    ),
-    TE.chain(data =>
-      pipe(
-        validateUser(data),
-        E.mapLeft((e): FetchError => ({ type: 'validation', message: e })),
-        TE.fromEither
-      )
-    )
+function UserList() {
+  const { data, error, loading } = useFetch<User[]>('/api/users')
+
+  if (loading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+  return (
+    <ul>
+      {data?.map(user => <li key={user.id}>{user.name}</li>)}
+    </ul>
   )
-
-function UserProfile({ userId }: { userId: string }) {
-  const fetchTask = useMemo(() => fetchUser(userId), [userId])
-  const { data, loading, refetch } = useFetch(fetchTask)
-
-  if (loading) return <Spinner />
-
-  return pipe(
-    data,
-    E.fold(
-      () => null,
-      E.fold(
-        (error) => <ErrorMessage error={error} onRetry={refetch} />,
-        (user) => <UserCard user={user} />
-      )
-    )
-  ) ?? <Spinner />
 }
 ```
 
-### Composing Multiple Async Operations
+### Chaining API Calls
 
 ```typescript
-import * as TE from 'fp-ts/TaskEither'
-import * as A from 'fp-ts/Array'
-import { sequenceT } from 'fp-ts/Apply'
-
-const fetchUserWithPosts = (userId: string): TE.TaskEither<FetchError, UserWithPosts> =>
-  pipe(
-    sequenceT(TE.ApplyPar)(
-      fetchUser(userId),
-      fetchUserPosts(userId)
-    ),
-    TE.map(([user, posts]) => ({ ...user, posts }))
-  )
-
-// Sequential operations
-const fetchUserThenPosts = (userId: string): TE.TaskEither<FetchError, UserWithPosts> =>
-  pipe(
-    fetchUser(userId),
-    TE.chain(user =>
-      pipe(
-        fetchUserPosts(user.id),
-        TE.map(posts => ({ ...user, posts }))
-      )
-    )
-  )
+// Fetch user, then fetch their posts
+const fetchUserWithPosts = (userId: string) => pipe(
+  fetchJson<User>(`/api/users/${userId}`),
+  TE.flatMap(user => pipe(
+    fetchJson<Post[]>(`/api/users/${userId}/posts`),
+    TE.map(posts => ({ ...user, posts }))
+  ))
+)
 ```
 
-## RemoteData Pattern
-
-RemoteData explicitly models all states of async data: NotAsked, Loading, Failure, Success.
-
-### RemoteData Type Definition
+### Parallel API Calls
 
 ```typescript
-import * as E from 'fp-ts/Either'
-import * as O from 'fp-ts/Option'
+import { sequenceT } from 'fp-ts/Apply'
 
-// Define RemoteData ADT
+// Fetch multiple things at once
+const fetchDashboardData = () => pipe(
+  sequenceT(TE.ApplyPar)(
+    fetchJson<User>('/api/user'),
+    fetchJson<Stats>('/api/stats'),
+    fetchJson<Notifications[]>('/api/notifications')
+  ),
+  TE.map(([user, stats, notifications]) => ({
+    user,
+    stats,
+    notifications
+  }))
+)
+```
+
+---
+
+## 4. RemoteData Pattern (The Right Way to Handle Async State)
+
+Stop using `{ data, loading, error }` booleans. Use a proper state machine.
+
+### The Pattern
+
+```typescript
+// RemoteData has exactly 4 states - no impossible combinations
 type RemoteData<E, A> =
-  | { readonly _tag: 'NotAsked' }
-  | { readonly _tag: 'Loading' }
-  | { readonly _tag: 'Failure'; readonly error: E }
-  | { readonly _tag: 'Success'; readonly data: A }
+  | { _tag: 'NotAsked' }                    // Haven't started yet
+  | { _tag: 'Loading' }                     // In progress
+  | { _tag: 'Failure'; error: E }           // Failed
+  | { _tag: 'Success'; data: A }            // Got it!
 
 // Constructors
-const notAsked: RemoteData<never, never> = { _tag: 'NotAsked' }
-const loading: RemoteData<never, never> = { _tag: 'Loading' }
-const failure = <E>(error: E): RemoteData<E, never> => ({ _tag: 'Failure', error })
-const success = <A>(data: A): RemoteData<never, A> => ({ _tag: 'Success', data })
+const notAsked = <E, A>(): RemoteData<E, A> => ({ _tag: 'NotAsked' })
+const loading = <E, A>(): RemoteData<E, A> => ({ _tag: 'Loading' })
+const failure = <E, A>(error: E): RemoteData<E, A> => ({ _tag: 'Failure', error })
+const success = <E, A>(data: A): RemoteData<E, A> => ({ _tag: 'Success', data })
 
-// Type guards
-const isNotAsked = <E, A>(rd: RemoteData<E, A>): rd is { _tag: 'NotAsked' } =>
-  rd._tag === 'NotAsked'
-const isLoading = <E, A>(rd: RemoteData<E, A>): rd is { _tag: 'Loading' } =>
-  rd._tag === 'Loading'
-const isFailure = <E, A>(rd: RemoteData<E, A>): rd is { _tag: 'Failure'; error: E } =>
-  rd._tag === 'Failure'
-const isSuccess = <E, A>(rd: RemoteData<E, A>): rd is { _tag: 'Success'; data: A } =>
-  rd._tag === 'Success'
-
-// Fold/match function
-const fold = <E, A, B>(
-  onNotAsked: () => B,
-  onLoading: () => B,
-  onFailure: (e: E) => B,
-  onSuccess: (a: A) => B
-) => (rd: RemoteData<E, A>): B => {
+// Pattern match all states
+function fold<E, A, R>(
+  rd: RemoteData<E, A>,
+  onNotAsked: () => R,
+  onLoading: () => R,
+  onFailure: (e: E) => R,
+  onSuccess: (a: A) => R
+): R {
   switch (rd._tag) {
     case 'NotAsked': return onNotAsked()
     case 'Loading': return onLoading()
@@ -346,718 +367,424 @@ const fold = <E, A, B>(
     case 'Success': return onSuccess(rd.data)
   }
 }
-
-// Map function
-const map = <A, B>(f: (a: A) => B) =>
-  <E>(rd: RemoteData<E, A>): RemoteData<E, B> =>
-    isSuccess(rd) ? success(f(rd.data)) : rd
-
-// Chain function
-const chain = <E, A, B>(f: (a: A) => RemoteData<E, B>) =>
-  (rd: RemoteData<E, A>): RemoteData<E, B> =>
-    isSuccess(rd) ? f(rd.data) : rd
-
-// From Either
-const fromEither = <E, A>(either: E.Either<E, A>): RemoteData<E, A> =>
-  pipe(either, E.fold(failure, success))
-
-// Get or else
-const getOrElse = <A>(defaultValue: () => A) =>
-  <E>(rd: RemoteData<E, A>): A =>
-    isSuccess(rd) ? rd.data : defaultValue()
 ```
 
-### RemoteData Hook
+### Hook with RemoteData
 
 ```typescript
-function useRemoteData<E, A>(
-  task: () => TE.TaskEither<E, A>,
-  deps: React.DependencyList = []
-): [RemoteData<E, A>, () => void] {
-  const [state, setState] = useState<RemoteData<E, A>>(notAsked)
+function useRemoteData<T>(fetchFn: () => Promise<T>) {
+  const [state, setState] = useState<RemoteData<Error, T>>(notAsked())
 
-  const execute = useCallback(async () => {
-    setState(loading)
-    const result = await task()()
-    setState(fromEither(result))
-  }, deps)
+  const execute = async () => {
+    setState(loading())
+    try {
+      const data = await fetchFn()
+      setState(success(data))
+    } catch (err) {
+      setState(failure(err instanceof Error ? err : new Error(String(err))))
+    }
+  }
 
-  return [state, execute]
+  return { state, execute }
 }
 
 // Usage
-function UserList() {
-  const [users, fetchUsers] = useRemoteData(
-    () => fetchAllUsers(),
-    []
+function UserProfile({ userId }: { userId: string }) {
+  const { state, execute } = useRemoteData(() =>
+    fetch(`/api/users/${userId}`).then(r => r.json())
+  )
+
+  useEffect(() => { execute() }, [userId])
+
+  return fold(
+    state,
+    () => <button onClick={execute}>Load User</button>,
+    () => <Spinner />,
+    (err) => <ErrorMessage message={err.message} onRetry={execute} />,
+    (user) => <UserCard user={user} />
+  )
+}
+```
+
+### Why RemoteData Beats Booleans
+
+```typescript
+// ❌ BAD: Impossible states are possible
+interface BadState {
+  data: User | null
+  loading: boolean
+  error: Error | null
+}
+// Can have: { data: user, loading: true, error: someError } - what does that mean?!
+
+// ✅ GOOD: Only valid states exist
+type GoodState = RemoteData<Error, User>
+// Can only be: NotAsked | Loading | Failure | Success
+```
+
+---
+
+## 5. Referential Stability (Preventing Re-renders)
+
+fp-ts values like `O.some(1)` create new objects each render. React sees them as "changed".
+
+### The Problem
+
+```typescript
+// ❌ BAD: Creates new Option every render
+function BadComponent() {
+  const [value, setValue] = useState(O.some(1))
+
+  useEffect(() => {
+    // This runs EVERY render because O.some(1) !== O.some(1)
+    console.log('value changed')
+  }, [value])
+}
+```
+
+### Solution 1: useMemo
+
+```typescript
+// ✅ GOOD: Memoize Option creation
+function GoodComponent() {
+  const [rawValue, setRawValue] = useState<number | null>(1)
+
+  const value = useMemo(
+    () => O.fromNullable(rawValue),
+    [rawValue]  // Only recreate when rawValue changes
   )
 
   useEffect(() => {
-    fetchUsers()
-  }, [fetchUsers])
-
-  return pipe(
-    users,
-    fold(
-      () => <button onClick={fetchUsers}>Load Users</button>,
-      () => <Spinner />,
-      (error) => <ErrorBanner error={error} onRetry={fetchUsers} />,
-      (data) => <UserTable users={data} />
-    )
-  )
+    // Now this only runs when rawValue actually changes
+    console.log('value changed')
+  }, [rawValue])  // Depend on raw value, not Option
 }
 ```
 
-### RemoteData with Refresh
+### Solution 2: fp-ts-react-stable-hooks
+
+```bash
+npm install fp-ts-react-stable-hooks
+```
 
 ```typescript
-function useRemoteDataWithRefresh<E, A>(
-  task: () => TE.TaskEither<E, A>,
-  deps: React.DependencyList = []
-): {
-  data: RemoteData<E, A>
-  fetch: () => void
-  refresh: () => void
-  isRefreshing: boolean
-} {
-  const [state, setState] = useState<RemoteData<E, A>>(notAsked)
-  const [isRefreshing, setIsRefreshing] = useState(false)
+import { useStableO, useStableEffect } from 'fp-ts-react-stable-hooks'
+import * as O from 'fp-ts/Option'
+import * as Eq from 'fp-ts/Eq'
 
-  const execute = useCallback(async (isRefresh: boolean) => {
-    if (isRefresh) {
-      setIsRefreshing(true)
-    } else {
-      setState(loading)
-    }
+function StableComponent() {
+  // Uses fp-ts equality instead of reference equality
+  const [value, setValue] = useStableO(O.some(1))
 
-    const result = await task()()
-    setState(fromEither(result))
-    setIsRefreshing(false)
-  }, deps)
-
-  return {
-    data: state,
-    fetch: () => execute(false),
-    refresh: () => execute(true),
-    isRefreshing
-  }
-}
-```
-
-## Form Validation with Either
-
-### Validation Types and Combinators
-
-```typescript
-import * as E from 'fp-ts/Either'
-import * as A from 'fp-ts/Apply'
-import * as NEA from 'fp-ts/NonEmptyArray'
-import { pipe } from 'fp-ts/function'
-
-// Validation error type
-interface ValidationError {
-  field: string
-  message: string
-}
-
-// Accumulated validation (collects all errors)
-type Validation<A> = E.Either<NEA.NonEmptyArray<ValidationError>, A>
-
-// Applicative for accumulating errors
-const validationApplicative = E.getApplicativeValidation(NEA.getSemigroup<ValidationError>())
-
-// Lift a validation function
-const validate = <A>(
-  field: string,
-  predicate: (a: A) => boolean,
-  message: string
-) => (value: A): Validation<A> =>
-  predicate(value)
-    ? E.right(value)
-    : E.left(NEA.of({ field, message }))
-
-// Common validators
-const required = (field: string) =>
-  validate<string>(field, s => s.trim().length > 0, `${field} is required`)
-
-const minLength = (field: string, min: number) =>
-  validate<string>(field, s => s.length >= min, `${field} must be at least ${min} characters`)
-
-const maxLength = (field: string, max: number) =>
-  validate<string>(field, s => s.length <= max, `${field} must be at most ${max} characters`)
-
-const email = (field: string) =>
-  validate<string>(field, s => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s), `${field} must be a valid email`)
-
-const matches = (field: string, pattern: RegExp, message: string) =>
-  validate<string>(field, s => pattern.test(s), message)
-
-// Combine validators for a single field
-const combineValidators = <A>(...validators: Array<(a: A) => Validation<A>>) =>
-  (value: A): Validation<A> =>
-    pipe(
-      validators.map(v => v(value)),
-      A.sequenceT(validationApplicative),
-      E.map(() => value)
-    )
-```
-
-### Form Validation Hook
-
-```typescript
-interface FormState<T> {
-  values: T
-  errors: Record<keyof T, string[]>
-  touched: Record<keyof T, boolean>
-  isValid: boolean
-  isSubmitting: boolean
-}
-
-interface UseFormValidation<T> {
-  state: FormState<T>
-  setValue: <K extends keyof T>(field: K, value: T[K]) => void
-  setTouched: <K extends keyof T>(field: K) => void
-  validate: () => Validation<T>
-  handleSubmit: (onSubmit: (values: T) => Promise<void>) => (e: React.FormEvent) => void
-  getFieldProps: <K extends keyof T>(field: K) => {
-    value: T[K]
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-    onBlur: () => void
-    error: string | undefined
-  }
-}
-
-function useFormValidation<T extends Record<string, unknown>>(
-  initialValues: T,
-  validators: { [K in keyof T]?: (value: T[K]) => Validation<T[K]> }
-): UseFormValidation<T> {
-  const [values, setValues] = useState(initialValues)
-  const [errors, setErrors] = useState<Record<keyof T, string[]>>(
-    {} as Record<keyof T, string[]>
-  )
-  const [touched, setTouched] = useState<Record<keyof T, boolean>>(
-    {} as Record<keyof T, boolean>
-  )
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const validateField = useCallback(<K extends keyof T>(field: K, value: T[K]): string[] => {
-    const validator = validators[field]
-    if (!validator) return []
-
-    return pipe(
-      validator(value),
-      E.fold(
-        (errs) => errs.map(e => e.message),
-        () => []
-      )
-    )
-  }, [validators])
-
-  const validateAll = useCallback((): Validation<T> => {
-    const validations = Object.keys(validators).map(field => {
-      const key = field as keyof T
-      const validator = validators[key]
-      if (!validator) return E.right(values[key])
-      return validator(values[key])
-    })
-
-    const newErrors = {} as Record<keyof T, string[]>
-    Object.keys(validators).forEach((field, index) => {
-      const key = field as keyof T
-      newErrors[key] = pipe(
-        validations[index],
-        E.fold(
-          (errs) => errs.map(e => e.message),
-          () => []
-        )
-      )
-    })
-    setErrors(newErrors)
-
-    // Check if all validations pass
-    const hasErrors = Object.values(newErrors).some(
-      (fieldErrors) => (fieldErrors as string[]).length > 0
-    )
-
-    return hasErrors
-      ? E.left(NEA.of({ field: 'form', message: 'Validation failed' }))
-      : E.right(values)
-  }, [validators, values])
-
-  const setValue = useCallback(<K extends keyof T>(field: K, value: T[K]) => {
-    setValues(v => ({ ...v, [field]: value }))
-    if (touched[field]) {
-      setErrors(e => ({ ...e, [field]: validateField(field, value) }))
-    }
-  }, [touched, validateField])
-
-  const setFieldTouched = useCallback(<K extends keyof T>(field: K) => {
-    setTouched(t => ({ ...t, [field]: true }))
-    setErrors(e => ({ ...e, [field]: validateField(field, values[field]) }))
-  }, [values, validateField])
-
-  const handleSubmit = useCallback(
-    (onSubmit: (values: T) => Promise<void>) =>
-      async (e: React.FormEvent) => {
-        e.preventDefault()
-        setIsSubmitting(true)
-
-        const result = validateAll()
-        await pipe(
-          result,
-          E.fold(
-            () => Promise.resolve(),
-            (validValues) => onSubmit(validValues)
-          )
-        )
-
-        setIsSubmitting(false)
-      },
-    [validateAll]
-  )
-
-  const getFieldProps = useCallback(<K extends keyof T>(field: K) => ({
-    value: values[field],
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-      setValue(field, e.target.value as T[K]),
-    onBlur: () => setFieldTouched(field),
-    error: touched[field] && errors[field]?.length > 0 ? errors[field][0] : undefined
-  }), [values, errors, touched, setValue, setFieldTouched])
-
-  const isValid = Object.values(errors).every(
-    (fieldErrors) => (fieldErrors as string[]).length === 0
-  )
-
-  return {
-    state: { values, errors, touched, isValid, isSubmitting },
-    setValue,
-    setTouched: setFieldTouched,
-    validate: validateAll,
-    handleSubmit,
-    getFieldProps
-  }
-}
-```
-
-### Form Example
-
-```typescript
-interface SignupForm {
-  username: string
-  email: string
-  password: string
-  confirmPassword: string
-}
-
-const signupValidators = {
-  username: combineValidators(
-    required('username'),
-    minLength('username', 3),
-    maxLength('username', 20)
-  ),
-  email: combineValidators(
-    required('email'),
-    email('email')
-  ),
-  password: combineValidators(
-    required('password'),
-    minLength('password', 8),
-    matches('password', /[A-Z]/, 'Password must contain uppercase'),
-    matches('password', /[0-9]/, 'Password must contain a number')
-  )
-}
-
-function SignupForm() {
-  const form = useFormValidation<SignupForm>(
-    { username: '', email: '', password: '', confirmPassword: '' },
-    signupValidators
-  )
-
-  const onSubmit = async (values: SignupForm) => {
-    await api.signup(values)
-  }
-
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      <FormField label="Username" {...form.getFieldProps('username')} />
-      <FormField label="Email" {...form.getFieldProps('email')} />
-      <FormField label="Password" type="password" {...form.getFieldProps('password')} />
-
-      <button type="submit" disabled={!form.state.isValid || form.state.isSubmitting}>
-        {form.state.isSubmitting ? 'Signing up...' : 'Sign Up'}
-      </button>
-    </form>
+  // Effect that understands Option equality
+  useStableEffect(
+    () => { console.log('value changed') },
+    [value],
+    Eq.tuple(O.getEq(Eq.eqNumber))  // Custom equality
   )
 }
 ```
 
-## ReaderTaskEither for Dependency Injection
+---
 
-### Setting Up Dependencies
+## 6. Dependency Injection with Context
+
+Use ReaderTaskEither for testable components with injected dependencies.
+
+### Setup Dependencies
 
 ```typescript
 import * as RTE from 'fp-ts/ReaderTaskEither'
-import * as TE from 'fp-ts/TaskEither'
 import { pipe } from 'fp-ts/function'
+import { createContext, useContext, ReactNode } from 'react'
 
-// Define dependencies interface
+// Define what services your app needs
 interface AppDependencies {
-  apiClient: {
-    get: <T>(url: string) => TE.TaskEither<ApiError, T>
-    post: <T>(url: string, body: unknown) => TE.TaskEither<ApiError, T>
+  api: {
+    getUser: (id: string) => Promise<User>
+    updateUser: (id: string, data: Partial<User>) => Promise<User>
   }
-  storage: {
-    get: (key: string) => TE.TaskEither<StorageError, string | null>
-    set: (key: string, value: string) => TE.TaskEither<StorageError, void>
-  }
-  logger: {
-    info: (message: string) => void
-    error: (message: string, error: unknown) => void
+  analytics: {
+    track: (event: string, data?: object) => void
   }
 }
 
-type AppError = ApiError | StorageError | ValidationError
+// Create context
+const DepsContext = createContext<AppDependencies | null>(null)
 
-// Define operations using ReaderTaskEither
-const fetchUser = (id: string): RTE.ReaderTaskEither<AppDependencies, AppError, User> =>
-  pipe(
-    RTE.ask<AppDependencies>(),
-    RTE.chainTaskEitherK(deps => deps.apiClient.get<User>(`/users/${id}`))
-  )
-
-const saveUserPreferences = (
-  prefs: UserPreferences
-): RTE.ReaderTaskEither<AppDependencies, AppError, void> =>
-  pipe(
-    RTE.ask<AppDependencies>(),
-    RTE.chainTaskEitherK(deps =>
-      deps.storage.set('preferences', JSON.stringify(prefs))
-    )
-  )
-
-// Compose operations
-const initializeUser = (
-  id: string
-): RTE.ReaderTaskEither<AppDependencies, AppError, UserWithPrefs> =>
-  pipe(
-    fetchUser(id),
-    RTE.bindTo('user'),
-    RTE.bind('preferences', () =>
-      pipe(
-        RTE.ask<AppDependencies>(),
-        RTE.chainTaskEitherK(deps => deps.storage.get('preferences')),
-        RTE.map(prefs => prefs ? JSON.parse(prefs) : defaultPreferences)
-      )
-    ),
-    RTE.map(({ user, preferences }) => ({ ...user, preferences }))
-  )
-```
-
-### React Context for Dependencies
-
-```typescript
-import { createContext, useContext, useMemo } from 'react'
-import * as RTE from 'fp-ts/ReaderTaskEither'
-
-const DependenciesContext = createContext<AppDependencies | null>(null)
-
-function DependenciesProvider({
-  children,
-  dependencies
-}: {
-  children: React.ReactNode
-  dependencies: AppDependencies
-}) {
-  return (
-    <DependenciesContext.Provider value={dependencies}>
-      {children}
-    </DependenciesContext.Provider>
-  )
+// Provider
+function AppProvider({ deps, children }: { deps: AppDependencies; children: ReactNode }) {
+  return <DepsContext.Provider value={deps}>{children}</DepsContext.Provider>
 }
 
-function useDependencies(): AppDependencies {
-  const deps = useContext(DependenciesContext)
-  if (!deps) {
-    throw new Error('useDependencies must be used within DependenciesProvider')
-  }
+// Hook to use dependencies
+function useDeps(): AppDependencies {
+  const deps = useContext(DepsContext)
+  if (!deps) throw new Error('Missing AppProvider')
   return deps
 }
-
-// Hook to run ReaderTaskEither with injected dependencies
-function useRTE<E, A>(
-  rte: RTE.ReaderTaskEither<AppDependencies, E, A>
-): [RemoteData<E, A>, () => void] {
-  const deps = useDependencies()
-
-  const [state, setState] = useState<RemoteData<E, A>>(notAsked)
-
-  const execute = useCallback(async () => {
-    setState(loading)
-    const result = await rte(deps)()
-    setState(fromEither(result))
-  }, [deps, rte])
-
-  return [state, execute]
-}
 ```
 
-### Usage in Components
+### Use in Components
 
 ```typescript
-// App setup
-function App() {
-  const dependencies: AppDependencies = useMemo(() => ({
-    apiClient: createApiClient(config.apiBaseUrl),
-    storage: createStorage(),
-    logger: createLogger()
-  }), [])
-
-  return (
-    <DependenciesProvider dependencies={dependencies}>
-      <Router>
-        <Routes />
-      </Router>
-    </DependenciesProvider>
-  )
-}
-
-// Component using RTE
-function UserDashboard({ userId }: { userId: string }) {
-  const initUser = useMemo(() => initializeUser(userId), [userId])
-  const [userData, fetchUser] = useRTE(initUser)
+function UserProfile({ userId }: { userId: string }) {
+  const { api, analytics } = useDeps()
+  const [user, setUser] = useState<RemoteData<Error, User>>(notAsked())
 
   useEffect(() => {
-    fetchUser()
-  }, [fetchUser])
+    setUser(loading())
+    api.getUser(userId)
+      .then(u => {
+        setUser(success(u))
+        analytics.track('user_viewed', { userId })
+      })
+      .catch(e => setUser(failure(e)))
+  }, [userId, api, analytics])
 
-  return pipe(
-    userData,
-    fold(
-      () => <WelcomeScreen onStart={fetchUser} />,
-      () => <LoadingDashboard />,
-      (error) => <ErrorScreen error={error} onRetry={fetchUser} />,
-      (user) => <Dashboard user={user} />
-    )
-  )
+  // render...
 }
 ```
 
 ### Testing with Mock Dependencies
 
 ```typescript
-const mockDependencies: AppDependencies = {
-  apiClient: {
-    get: jest.fn().mockReturnValue(TE.right({ id: '1', name: 'Test User' })),
-    post: jest.fn().mockReturnValue(TE.right(undefined))
+const mockDeps: AppDependencies = {
+  api: {
+    getUser: jest.fn().mockResolvedValue({ id: '1', name: 'Test User' }),
+    updateUser: jest.fn().mockResolvedValue({ id: '1', name: 'Updated' }),
   },
-  storage: {
-    get: jest.fn().mockReturnValue(TE.right(null)),
-    set: jest.fn().mockReturnValue(TE.right(undefined))
+  analytics: {
+    track: jest.fn(),
   },
-  logger: {
-    info: jest.fn(),
-    error: jest.fn()
-  }
 }
 
-describe('UserDashboard', () => {
-  it('fetches and displays user data', async () => {
-    render(
-      <DependenciesProvider dependencies={mockDependencies}>
-        <UserDashboard userId="1" />
-      </DependenciesProvider>
-    )
+test('loads user on mount', async () => {
+  render(
+    <AppProvider deps={mockDeps}>
+      <UserProfile userId="1" />
+    </AppProvider>
+  )
 
-    await waitFor(() => {
-      expect(screen.getByText('Test User')).toBeInTheDocument()
-    })
-  })
+  await screen.findByText('Test User')
+  expect(mockDeps.api.getUser).toHaveBeenCalledWith('1')
 })
 ```
 
-## Component Composition with pipe
+---
 
-### Conditional Rendering
+## 7. React 19 Patterns
+
+### use() for Promises (React 19+)
 
 ```typescript
-import { pipe } from 'fp-ts/function'
-import * as O from 'fp-ts/Option'
+import { use, Suspense } from 'react'
 
-function ConditionalContent({ user }: { user: O.Option<User> }) {
-  return pipe(
-    user,
-    O.fold(
-      () => <GuestContent />,
-      (u) => pipe(
-        u.subscription,
-        O.fold(
-          () => <FreeUserContent user={u} />,
-          (sub) => sub.tier === 'premium'
-            ? <PremiumContent user={u} subscription={sub} />
-            : <BasicContent user={u} subscription={sub} />
-        )
-      )
-    )
+// Instead of useEffect + useState for data fetching
+function UserProfile({ userPromise }: { userPromise: Promise<User> }) {
+  const user = use(userPromise)  // Suspends until resolved
+  return <div>{user.name}</div>
+}
+
+// Parent provides the promise
+function App() {
+  const userPromise = fetchUser('1')  // Start fetching immediately
+
+  return (
+    <Suspense fallback={<Spinner />}>
+      <UserProfile userPromise={userPromise} />
+    </Suspense>
   )
 }
 ```
 
-### List Rendering with fp-ts
+### useActionState for Forms (React 19+)
 
 ```typescript
-import * as A from 'fp-ts/Array'
-import * as O from 'fp-ts/Option'
-import { pipe } from 'fp-ts/function'
+import { useActionState } from 'react'
+import * as E from 'fp-ts/Either'
 
-function UserList({ users }: { users: User[] }) {
+interface FormState {
+  errors: string[]
+  success: boolean
+}
+
+async function submitForm(
+  prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const data = {
+    email: formData.get('email') as string,
+    password: formData.get('password') as string,
+  }
+
+  // Use Either for validation
+  const result = pipe(
+    validateForm(data),
+    E.match(
+      (errors) => ({ errors, success: false }),
+      async (valid) => {
+        await saveToServer(valid)
+        return { errors: [], success: true }
+      }
+    )
+  )
+
+  return result
+}
+
+function SignupForm() {
+  const [state, formAction, isPending] = useActionState(submitForm, {
+    errors: [],
+    success: false
+  })
+
+  return (
+    <form action={formAction}>
+      <input name="email" type="email" />
+      <input name="password" type="password" />
+
+      {state.errors.map(e => <p key={e} className="error">{e}</p>)}
+
+      <button disabled={isPending}>
+        {isPending ? 'Submitting...' : 'Sign Up'}
+      </button>
+    </form>
+  )
+}
+```
+
+### useOptimistic for Instant Feedback (React 19+)
+
+```typescript
+import { useOptimistic } from 'react'
+
+function TodoList({ todos }: { todos: Todo[] }) {
+  const [optimisticTodos, addOptimisticTodo] = useOptimistic(
+    todos,
+    (state, newTodo: Todo) => [...state, { ...newTodo, pending: true }]
+  )
+
+  const addTodo = async (text: string) => {
+    const newTodo = { id: crypto.randomUUID(), text, done: false }
+
+    // Immediately show in UI
+    addOptimisticTodo(newTodo)
+
+    // Actually save (will reconcile when done)
+    await saveTodo(newTodo)
+  }
+
   return (
     <ul>
-      {pipe(
-        users,
-        A.filter(u => u.isActive),
-        A.sort(userByNameOrd),
-        A.map(user => <UserListItem key={user.id} user={user} />)
-      )}
+      {optimisticTodos.map(todo => (
+        <li key={todo.id} style={{ opacity: todo.pending ? 0.5 : 1 }}>
+          {todo.text}
+        </li>
+      ))}
     </ul>
   )
 }
+```
 
-// With grouping
-function GroupedUserList({ users }: { users: User[] }) {
-  const grouped = pipe(
-    users,
-    NEA.fromArray,
-    O.map(NEA.groupBy(u => u.department)),
+---
+
+## 8. Common Patterns Cheat Sheet
+
+### Render Based on Option
+
+```typescript
+// Pattern 1: match
+pipe(
+  maybeUser,
+  O.match(
+    () => <LoginButton />,
+    (user) => <UserMenu user={user} />
+  )
+)
+
+// Pattern 2: fold (same as match)
+O.fold(
+  () => <LoginButton />,
+  (user) => <UserMenu user={user} />
+)(maybeUser)
+
+// Pattern 3: getOrElse for simple defaults
+const name = pipe(
+  maybeUser,
+  O.map(u => u.name),
+  O.getOrElse(() => 'Guest')
+)
+```
+
+### Render Based on Either
+
+```typescript
+pipe(
+  validationResult,
+  E.match(
+    (errors) => <ErrorList errors={errors} />,
+    (data) => <SuccessMessage data={data} />
+  )
+)
+```
+
+### Safe Array Rendering
+
+```typescript
+import * as A from 'fp-ts/Array'
+
+// Get first item safely
+const firstUser = pipe(
+  users,
+  A.head,
+  O.map(user => <Featured user={user} />),
+  O.getOrElse(() => <NoFeaturedUser />)
+)
+
+// Find specific item
+const adminUser = pipe(
+  users,
+  A.findFirst(u => u.role === 'admin'),
+  O.map(admin => <AdminBadge user={admin} />),
+  O.toNullable  // or O.getOrElse(() => null)
+)
+```
+
+### Conditional Props
+
+```typescript
+// Add props only if value exists
+const modalProps = {
+  isOpen: true,
+  ...pipe(
+    maybeTitle,
+    O.map(title => ({ title })),
     O.getOrElse(() => ({}))
   )
-
-  return (
-    <div>
-      {Object.entries(grouped).map(([dept, deptUsers]) => (
-        <section key={dept}>
-          <h2>{dept}</h2>
-          <UserList users={deptUsers} />
-        </section>
-      ))}
-    </div>
-  )
 }
 ```
 
-### Higher-Order Components with pipe
+---
 
-```typescript
-import { pipe } from 'fp-ts/function'
-import * as O from 'fp-ts/Option'
+## When to Use What
 
-// HOC that requires authentication
-const withAuth = <P extends object>(
-  Component: React.ComponentType<P & { user: User }>
-): React.FC<P> => {
-  return (props: P) => {
-    const [currentUser] = useCurrentUser()
+| Situation | Use |
+|-----------|-----|
+| Value might not exist | `Option<T>` |
+| Operation might fail (sync) | `Either<E, A>` |
+| Async operation might fail | `TaskEither<E, A>` |
+| Need loading/error/success UI | `RemoteData<E, A>` |
+| Form with multiple validations | `Either` with validation applicative |
+| Dependency injection | Context + `ReaderTaskEither` |
+| Prevent re-renders with fp-ts | `useMemo` or `fp-ts-react-stable-hooks` |
 
-    return pipe(
-      currentUser,
-      O.fold(
-        () => <Redirect to="/login" />,
-        (user) => <Component {...props} user={user} />
-      )
-    )
-  }
-}
+---
 
-// HOC that handles loading state
-const withRemoteData = <P extends object, E, A>(
-  Component: React.ComponentType<P & { data: A }>,
-  useData: () => RemoteData<E, A>,
-  ErrorComponent: React.ComponentType<{ error: E; retry: () => void }>
-): React.FC<P> => {
-  return (props: P) => {
-    const [data, fetch] = useData()
+## Libraries
 
-    useEffect(() => {
-      if (isNotAsked(data)) fetch()
-    }, [data, fetch])
-
-    return pipe(
-      data,
-      fold(
-        () => null,
-        () => <Loading />,
-        (error) => <ErrorComponent error={error} retry={fetch} />,
-        (d) => <Component {...props} data={d} />
-      )
-    )
-  }
-}
-```
-
-## Best Practices
-
-### 1. Always Use Eq Instances for Stability
-
-```typescript
-// Define Eq instances for your domain types
-const productEq: Eq.Eq<Product> = Eq.struct({
-  id: S.Eq,
-  name: S.Eq,
-  price: N.Eq
-})
-
-// Use with stable hooks
-const [product, setProduct] = useStableO<Product>(O.none, productEq)
-```
-
-### 2. Prefer RemoteData Over Boolean Flags
-
-```typescript
-// Avoid
-const [data, setData] = useState<User | null>(null)
-const [loading, setLoading] = useState(false)
-const [error, setError] = useState<Error | null>(null)
-
-// Prefer
-const [userData, setUserData] = useState<RemoteData<Error, User>>(notAsked)
-```
-
-### 3. Keep TaskEither Operations Pure
-
-```typescript
-// Define operations as pure functions
-const fetchAndValidateUser = (id: string): TE.TaskEither<AppError, ValidatedUser> =>
-  pipe(
-    fetchUser(id),
-    TE.chain(validateUser),
-    TE.chain(enrichWithMetadata)
-  )
-
-// Execute in useEffect or event handlers
-useEffect(() => {
-  fetchAndValidateUser(userId)().then(result => {
-    setState(fromEither(result))
-  })
-}, [userId])
-```
-
-### 4. Use ReaderTaskEither for Testable Code
-
-```typescript
-// Operations are easily testable with mock dependencies
-const operation: RTE.ReaderTaskEither<Deps, Error, Result> = ...
-
-// In tests
-const result = await operation(mockDeps)()
-expect(E.isRight(result)).toBe(true)
-```
-
-### 5. Validate at Boundaries
-
-```typescript
-// Validate data at API boundaries
-const fetchUser = (id: string): TE.TaskEither<FetchError, User> =>
-  pipe(
-    TE.tryCatch(() => fetch(`/api/users/${id}`).then(r => r.json()), toNetworkError),
-    TE.chain(flow(validateUserSchema, TE.fromEither)) // Validate immediately
-  )
-```
+- **[fp-ts](https://github.com/gcanti/fp-ts)** - Core library
+- **[fp-ts-react-stable-hooks](https://github.com/mblink/fp-ts-react-stable-hooks)** - Stable hooks
+- **[@devexperts/remote-data-ts](https://github.com/devexperts/remote-data-ts)** - RemoteData
+- **[io-ts](https://github.com/gcanti/io-ts)** - Runtime type validation
+- **[zod](https://github.com/colinhacks/zod)** - Schema validation (works great with fp-ts)
