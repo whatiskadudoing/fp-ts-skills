@@ -1,0 +1,119 @@
+{
+  "name": "fp-ts-skills",
+  "version": "2.0.0",
+  "description": "Practical functional programming skills for TypeScript",
+  "repository": "https://github.com/whatiskadudoing/fp-ts-skills",
+
+  "tiers": {
+    "quick-ref": {
+      "description": "Cheatsheets and decision helpers. ~50-100 lines, always cheap.",
+      "recommended": true
+    },
+    "core": {
+      "description": "Complete patterns with examples. ~300-500 lines.",
+      "recommended": true
+    },
+    "advanced": {
+      "description": "Deep dives and edge cases. ~600-900 lines. Opt-in.",
+      "recommended": false
+    }
+  },
+
+  "skills": {
+    "fp-types-ref": {
+      "path": "skills/quick-ref/fp-types-ref.md",
+      "tier": "quick-ref",
+      "lines": 75,
+      "tags": ["decision", "imports", "types"]
+    },
+    "fp-pipe-ref": {
+      "path": "skills/quick-ref/fp-pipe-ref.md",
+      "tier": "quick-ref",
+      "lines": 70,
+      "tags": ["pipe", "flow", "composition"]
+    },
+    "fp-option-ref": {
+      "path": "skills/quick-ref/fp-option-ref.md",
+      "tier": "quick-ref",
+      "lines": 70,
+      "tags": ["option", "nullable", "maybe"]
+    },
+    "fp-either-ref": {
+      "path": "skills/quick-ref/fp-either-ref.md",
+      "tier": "quick-ref",
+      "lines": 75,
+      "tags": ["either", "errors", "validation"]
+    },
+    "fp-taskeither-ref": {
+      "path": "skills/quick-ref/fp-taskeither-ref.md",
+      "tier": "quick-ref",
+      "lines": 85,
+      "tags": ["async", "promise", "errors"]
+    },
+    "fp-pragmatic": {
+      "path": "skills/fp-pragmatic.md",
+      "tier": "core",
+      "lines": 598,
+      "tags": ["beginner", "patterns", "best-practices"]
+    },
+    "fp-errors": {
+      "path": "skills/fp-errors.md",
+      "tier": "core",
+      "lines": 857,
+      "tags": ["errors", "either", "validation"]
+    },
+    "fp-async": {
+      "path": "skills/fp-async.md",
+      "tier": "core",
+      "lines": 964,
+      "tags": ["async", "taskeither", "promise"]
+    },
+    "fp-react": {
+      "path": "skills/fp-react.md",
+      "tier": "core",
+      "lines": 790,
+      "tags": ["react", "hooks", "state", "forms"]
+    },
+    "fp-data-transforms": {
+      "path": "skills/fp-data-transforms.md",
+      "tier": "advanced",
+      "lines": 1516,
+      "tags": ["arrays", "objects", "transformation"]
+    },
+    "fp-backend": {
+      "path": "skills/fp-backend.md",
+      "tier": "advanced",
+      "lines": 1335,
+      "tags": ["node", "express", "services"]
+    },
+    "fp-refactor": {
+      "path": "skills/fp-refactor.md",
+      "tier": "advanced",
+      "lines": 1781,
+      "tags": ["migration", "refactoring", "patterns"]
+    }
+  },
+
+  "bundles": {
+    "essentials": {
+      "description": "Quick references only - minimal tokens",
+      "skills": ["fp-types-ref", "fp-pipe-ref", "fp-option-ref", "fp-either-ref", "fp-taskeither-ref"],
+      "lines": 375
+    },
+    "recommended": {
+      "description": "Quick refs + core patterns",
+      "skills": ["fp-types-ref", "fp-pipe-ref", "fp-option-ref", "fp-either-ref", "fp-taskeither-ref", "fp-pragmatic", "fp-errors"],
+      "lines": 1830
+    },
+    "react": {
+      "description": "For React developers",
+      "skills": ["fp-types-ref", "fp-option-ref", "fp-either-ref", "fp-taskeither-ref", "fp-react"],
+      "lines": 1095
+    },
+    "backend": {
+      "description": "For Node/Deno developers",
+      "skills": ["fp-types-ref", "fp-either-ref", "fp-taskeither-ref", "fp-async", "fp-backend"],
+      "lines": 2529
+    }
+  }
+}
