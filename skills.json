@@ -21,73 +21,73 @@
 
   "skills": {
     "fp-types-ref": {
-      "path": "skills/quick-ref/fp-types-ref.md",
+      "path": "skills/quick-ref/fp-types-ref/SKILL.md",
       "tier": "quick-ref",
       "lines": 75,
       "tags": ["decision", "imports", "types"]
     },
     "fp-pipe-ref": {
-      "path": "skills/quick-ref/fp-pipe-ref.md",
+      "path": "skills/quick-ref/fp-pipe-ref/SKILL.md",
       "tier": "quick-ref",
       "lines": 70,
       "tags": ["pipe", "flow", "composition"]
     },
     "fp-option-ref": {
-      "path": "skills/quick-ref/fp-option-ref.md",
+      "path": "skills/quick-ref/fp-option-ref/SKILL.md",
       "tier": "quick-ref",
       "lines": 70,
       "tags": ["option", "nullable", "maybe"]
     },
     "fp-either-ref": {
-      "path": "skills/quick-ref/fp-either-ref.md",
+      "path": "skills/quick-ref/fp-either-ref/SKILL.md",
       "tier": "quick-ref",
       "lines": 75,
       "tags": ["either", "errors", "validation"]
     },
     "fp-taskeither-ref": {
-      "path": "skills/quick-ref/fp-taskeither-ref.md",
+      "path": "skills/quick-ref/fp-taskeither-ref/SKILL.md",
       "tier": "quick-ref",
       "lines": 85,
       "tags": ["async", "promise", "errors"]
     },
     "fp-pragmatic": {
-      "path": "skills/fp-pragmatic.md",
+      "path": "skills/fp-pragmatic/SKILL.md",
       "tier": "core",
       "lines": 598,
       "tags": ["beginner", "patterns", "best-practices"]
     },
     "fp-errors": {
-      "path": "skills/fp-errors.md",
+      "path": "skills/fp-errors/SKILL.md",
       "tier": "core",
       "lines": 857,
       "tags": ["errors", "either", "validation"]
     },
     "fp-async": {
-      "path": "skills/fp-async.md",
+      "path": "skills/fp-async/SKILL.md",
       "tier": "core",
       "lines": 964,
       "tags": ["async", "taskeither", "promise"]
     },
     "fp-react": {
-      "path": "skills/fp-react.md",
+      "path": "skills/fp-react/SKILL.md",
       "tier": "core",
       "lines": 790,
       "tags": ["react", "hooks", "state", "forms"]
     },
     "fp-data-transforms": {
-      "path": "skills/fp-data-transforms.md",
+      "path": "skills/fp-data-transforms/SKILL.md",
       "tier": "advanced",
       "lines": 1516,
       "tags": ["arrays", "objects", "transformation"]
     },
     "fp-backend": {
-      "path": "skills/fp-backend.md",
+      "path": "skills/fp-backend/SKILL.md",
       "tier": "advanced",
       "lines": 1335,
       "tags": ["node", "express", "services"]
     },
     "fp-refactor": {
-      "path": "skills/fp-refactor.md",
+      "path": "skills/fp-refactor/SKILL.md",
       "tier": "advanced",
       "lines": 1781,
       "tags": ["migration", "refactoring", "patterns"]
