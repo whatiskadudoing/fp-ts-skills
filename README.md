@@ -104,11 +104,27 @@ description: Form and API validation with error accumulation. Use when validatin
 ---
 ```
 
-## Resources
+## Resources & Sources
 
-- [fp-ts](https://github.com/gcanti/fp-ts) - The library
-- [Functional-Light JS](https://github.com/getify/Functional-Light-JS) - Philosophy
-- [Effect](https://github.com/Effect-TS/effect) - Future of FP in TS
+These skills were created by studying and synthesizing patterns from:
+
+### Core Libraries
+
+- [fp-ts](https://github.com/gcanti/fp-ts) - The functional programming library for TypeScript
+- [Effect](https://github.com/Effect-TS/effect) - Next-generation FP in TypeScript
+
+### Books & Guides
+
+- [Functional-Light JavaScript](https://github.com/getify/Functional-Light-JS) - Kyle Simpson's pragmatic approach to FP
+- [Mostly Adequate Guide to FP](https://github.com/MostlyAdequate/mostly-adequate-guide) - Professor Frisby's FP fundamentals
+- [Functional Programming Guide](https://github.com/enricopolanski/functional-programming) - Enrico Polanski's comprehensive guide
+
+### Articles
+
+- [Level Up React: Functional Programming in React](https://www.56kode.com/posts/level-up-react-functional-programming-in-react/) - 56kode
+- [Fundamentals of Functional Programming in React](https://blog.logrocket.com/fundamentals-functional-programming-react/) - LogRocket
+- [Hooked on React: React 19's Function Component Superpowers](https://dev.to/philipjohnbasile/hooked-on-react-the-complete-guide-to-react-19s-function-component-superpowers-1hdj) - Dev.to
+- [Functional Programming in React](https://blog.saeloun.com/2024/07/25/functional-programming-in-react/) - Saeloun
 
 ## License
 
