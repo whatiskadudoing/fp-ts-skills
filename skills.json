@@ -1,6 +1,6 @@
 {
   "name": "fp-ts-skills",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Practical functional programming skills for TypeScript",
   "repository": "https://github.com/whatiskadudoing/fp-ts-skills",
 
@@ -20,74 +20,74 @@
   },
 
   "skills": {
-    "fp-types-ref": {
-      "path": "skills/quick-ref/fp-types-ref/SKILL.md",
+    "fp-ts-types-ref": {
+      "path": "skills/quick-ref/fp-ts-types-ref/SKILL.md",
       "tier": "quick-ref",
       "lines": 75,
       "tags": ["decision", "imports", "types"]
     },
-    "fp-pipe-ref": {
-      "path": "skills/quick-ref/fp-pipe-ref/SKILL.md",
+    "fp-ts-pipe-ref": {
+      "path": "skills/quick-ref/fp-ts-pipe-ref/SKILL.md",
       "tier": "quick-ref",
       "lines": 70,
       "tags": ["pipe", "flow", "composition"]
     },
-    "fp-option-ref": {
-      "path": "skills/quick-ref/fp-option-ref/SKILL.md",
+    "fp-ts-option-ref": {
+      "path": "skills/quick-ref/fp-ts-option-ref/SKILL.md",
       "tier": "quick-ref",
       "lines": 70,
       "tags": ["option", "nullable", "maybe"]
     },
-    "fp-either-ref": {
-      "path": "skills/quick-ref/fp-either-ref/SKILL.md",
+    "fp-ts-either-ref": {
+      "path": "skills/quick-ref/fp-ts-either-ref/SKILL.md",
       "tier": "quick-ref",
       "lines": 75,
       "tags": ["either", "errors", "validation"]
     },
-    "fp-taskeither-ref": {
-      "path": "skills/quick-ref/fp-taskeither-ref/SKILL.md",
+    "fp-ts-taskeither-ref": {
+      "path": "skills/quick-ref/fp-ts-taskeither-ref/SKILL.md",
       "tier": "quick-ref",
       "lines": 85,
       "tags": ["async", "promise", "errors"]
     },
-    "fp-pragmatic": {
-      "path": "skills/fp-pragmatic/SKILL.md",
+    "fp-ts-pragmatic": {
+      "path": "skills/fp-ts-pragmatic/SKILL.md",
       "tier": "core",
       "lines": 598,
       "tags": ["beginner", "patterns", "best-practices"]
     },
-    "fp-errors": {
-      "path": "skills/fp-errors/SKILL.md",
+    "fp-ts-errors": {
+      "path": "skills/fp-ts-errors/SKILL.md",
       "tier": "core",
       "lines": 857,
       "tags": ["errors", "either", "validation"]
     },
-    "fp-async": {
-      "path": "skills/fp-async/SKILL.md",
+    "fp-ts-async-practical": {
+      "path": "skills/fp-ts-async-practical/SKILL.md",
       "tier": "core",
       "lines": 964,
       "tags": ["async", "taskeither", "promise"]
     },
-    "fp-react": {
-      "path": "skills/fp-react/SKILL.md",
+    "fp-ts-react": {
+      "path": "skills/fp-ts-react/SKILL.md",
       "tier": "core",
       "lines": 790,
       "tags": ["react", "hooks", "state", "forms"]
     },
-    "fp-data-transforms": {
-      "path": "skills/fp-data-transforms/SKILL.md",
+    "fp-ts-data-transforms": {
+      "path": "skills/fp-ts-data-transforms/SKILL.md",
       "tier": "advanced",
       "lines": 1516,
       "tags": ["arrays", "objects", "transformation"]
     },
-    "fp-backend": {
-      "path": "skills/fp-backend/SKILL.md",
+    "fp-ts-backend": {
+      "path": "skills/fp-ts-backend/SKILL.md",
       "tier": "advanced",
       "lines": 1335,
       "tags": ["node", "express", "services"]
     },
-    "fp-refactor": {
-      "path": "skills/fp-refactor/SKILL.md",
+    "fp-ts-refactor": {
+      "path": "skills/fp-ts-refactor/SKILL.md",
       "tier": "advanced",
       "lines": 1781,
       "tags": ["migration", "refactoring", "patterns"]
@@ -97,22 +97,22 @@
   "bundles": {
     "essentials": {
       "description": "Quick references only - minimal tokens",
-      "skills": ["fp-types-ref", "fp-pipe-ref", "fp-option-ref", "fp-either-ref", "fp-taskeither-ref"],
+      "skills": ["fp-ts-types-ref", "fp-ts-pipe-ref", "fp-ts-option-ref", "fp-ts-either-ref", "fp-ts-taskeither-ref"],
       "lines": 375
     },
     "recommended": {
       "description": "Quick refs + core patterns",
-      "skills": ["fp-types-ref", "fp-pipe-ref", "fp-option-ref", "fp-either-ref", "fp-taskeither-ref", "fp-pragmatic", "fp-errors"],
+      "skills": ["fp-ts-types-ref", "fp-ts-pipe-ref", "fp-ts-option-ref", "fp-ts-either-ref", "fp-ts-taskeither-ref", "fp-ts-pragmatic", "fp-ts-errors"],
       "lines": 1830
     },
     "react": {
       "description": "For React developers",
-      "skills": ["fp-types-ref", "fp-option-ref", "fp-either-ref", "fp-taskeither-ref", "fp-react"],
+      "skills": ["fp-ts-types-ref", "fp-ts-option-ref", "fp-ts-either-ref", "fp-ts-taskeither-ref", "fp-ts-react"],
       "lines": 1095
     },
     "backend": {
       "description": "For Node/Deno developers",
-      "skills": ["fp-types-ref", "fp-either-ref", "fp-taskeither-ref", "fp-async", "fp-backend"],
+      "skills": ["fp-ts-types-ref", "fp-ts-either-ref", "fp-ts-taskeither-ref", "fp-ts-async-practical", "fp-ts-backend"],
       "lines": 2529
     }
   }

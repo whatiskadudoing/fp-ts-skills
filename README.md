@@ -16,7 +16,7 @@ npx skills add whatiskadudoing/fp-ts-skills --list
 npx skills add whatiskadudoing/fp-ts-skills --all
 
 # Install specific skill
-npx skills add whatiskadudoing/fp-ts-skills --skill fp-react
+npx skills add whatiskadudoing/fp-ts-skills --skill fp-ts-react
 ```
 
 Works with Claude Code, Cursor, GitHub Copilot, Gemini CLI, and any agent supporting the SKILL.md format.
@@ -33,32 +33,32 @@ Works with Claude Code, Cursor, GitHub Copilot, Gemini CLI, and any agent suppor
 
 | Skill | Lines | Use For |
 |-------|-------|---------|
-| [fp-types-ref](skills/quick-ref/fp-types-ref/SKILL.md) | 75 | "Which type should I use?" |
-| [fp-pipe-ref](skills/quick-ref/fp-pipe-ref/SKILL.md) | 70 | pipe() and flow() patterns |
-| [fp-option-ref](skills/quick-ref/fp-option-ref/SKILL.md) | 70 | Handling nullable values |
-| [fp-either-ref](skills/quick-ref/fp-either-ref/SKILL.md) | 75 | Error handling basics |
-| [fp-taskeither-ref](skills/quick-ref/fp-taskeither-ref/SKILL.md) | 85 | Async error handling |
+| [fp-ts-types-ref](skills/quick-ref/fp-ts-types-ref/SKILL.md) | 75 | "Which type should I use?" |
+| [fp-ts-pipe-ref](skills/quick-ref/fp-ts-pipe-ref/SKILL.md) | 70 | pipe() and flow() patterns |
+| [fp-ts-option-ref](skills/quick-ref/fp-ts-option-ref/SKILL.md) | 70 | Handling nullable values |
+| [fp-ts-either-ref](skills/quick-ref/fp-ts-either-ref/SKILL.md) | 75 | Error handling basics |
+| [fp-ts-taskeither-ref](skills/quick-ref/fp-ts-taskeither-ref/SKILL.md) | 85 | Async error handling |
 
 ### Core Patterns
 
 | Skill | Lines | Use For |
 |-------|-------|---------|
-| [fp-pragmatic](skills/fp-pragmatic/SKILL.md) | 598 | 80/20 of FP, when NOT to use it |
-| [fp-errors](skills/fp-errors/SKILL.md) | 857 | Error handling patterns |
-| [fp-async](skills/fp-async/SKILL.md) | 964 | Async operations |
-| [fp-react](skills/fp-react/SKILL.md) | 790 | React state, forms, fetching |
-| [fp-compose](skills/fp-compose/SKILL.md) | 837 | Function composition |
-| [fp-validation](skills/fp-validation/SKILL.md) | 912 | Form/API validation |
+| [fp-ts-pragmatic](skills/fp-ts-pragmatic/SKILL.md) | 598 | 80/20 of FP, when NOT to use it |
+| [fp-ts-errors](skills/fp-ts-errors/SKILL.md) | 857 | Error handling patterns |
+| [fp-ts-async-practical](skills/fp-ts-async-practical/SKILL.md) | 964 | Async operations |
+| [fp-ts-react](skills/fp-ts-react/SKILL.md) | 790 | React state, forms, fetching |
+| [fp-ts-compose](skills/fp-ts-compose/SKILL.md) | 837 | Function composition |
+| [fp-ts-validation](skills/fp-ts-validation/SKILL.md) | 912 | Form/API validation |
 
 ### Advanced (Opt-in)
 
 | Skill | Lines | Use For |
 |-------|-------|---------|
-| [fp-data-transforms](skills/fp-data-transforms/SKILL.md) | 1516 | Complex data manipulation |
-| [fp-backend](skills/fp-backend/SKILL.md) | 1335 | Service layer, DI |
-| [fp-refactor](skills/fp-refactor/SKILL.md) | 1781 | Migration from imperative |
-| [fp-algebraic-types](skills/fp-algebraic-types/SKILL.md) | 1445 | Semigroup, Monoid, etc. |
-| [fp-side-effects](skills/fp-side-effects/SKILL.md) | 2042 | Effect management |
+| [fp-ts-data-transforms](skills/fp-ts-data-transforms/SKILL.md) | 1516 | Complex data manipulation |
+| [fp-ts-backend](skills/fp-ts-backend/SKILL.md) | 1335 | Service layer, DI |
+| [fp-ts-refactor](skills/fp-ts-refactor/SKILL.md) | 1781 | Migration from imperative |
+| [fp-ts-algebraic-types](skills/fp-ts-algebraic-types/SKILL.md) | 1445 | Semigroup, Monoid, etc. |
+| [fp-ts-side-effects](skills/fp-ts-side-effects/SKILL.md) | 2042 | Effect management |
 
 ## Bundles
 
@@ -66,18 +66,18 @@ Install multiple related skills at once:
 
 ```bash
 # Essentials - quick refs only (375 lines)
-npx skills add whatiskadudoing/fp-ts-skills --skill fp-types-ref
-npx skills add whatiskadudoing/fp-ts-skills --skill fp-pipe-ref
-npx skills add whatiskadudoing/fp-ts-skills --skill fp-option-ref
-npx skills add whatiskadudoing/fp-ts-skills --skill fp-either-ref
-npx skills add whatiskadudoing/fp-ts-skills --skill fp-taskeither-ref
+npx skills add whatiskadudoing/fp-ts-skills --skill fp-ts-types-ref
+npx skills add whatiskadudoing/fp-ts-skills --skill fp-ts-pipe-ref
+npx skills add whatiskadudoing/fp-ts-skills --skill fp-ts-option-ref
+npx skills add whatiskadudoing/fp-ts-skills --skill fp-ts-either-ref
+npx skills add whatiskadudoing/fp-ts-skills --skill fp-ts-taskeither-ref
 
 # React Developer
-npx skills add whatiskadudoing/fp-ts-skills --skill fp-react
+npx skills add whatiskadudoing/fp-ts-skills --skill fp-ts-react
 
 # Backend Developer
-npx skills add whatiskadudoing/fp-ts-skills --skill fp-async
-npx skills add whatiskadudoing/fp-ts-skills --skill fp-backend
+npx skills add whatiskadudoing/fp-ts-skills --skill fp-ts-async-practical
+npx skills add whatiskadudoing/fp-ts-skills --skill fp-ts-backend
 ```
 
 ## Philosophy
@@ -93,7 +93,7 @@ Claude uses **LLM reasoning** (not keywords) to decide when to invoke skills. Wr
 
 ```yaml
 ---
-name: fp-validation
+name: fp-ts-validation
 description: Form and API validation with error accumulation. Use when validating user input, handling multiple errors, or building type-safe validators.
 ---
 ```
